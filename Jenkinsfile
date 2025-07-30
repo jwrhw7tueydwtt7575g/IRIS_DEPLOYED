@@ -102,8 +102,15 @@ pipeline {
                 }
             }
         }
-
-        
+        stage('AWS Deployment') {
+            steps {
+                script {
+                    // AWS Deployment
+                    echo 'AWS Deployment........'
+                    sh "aws ecs update-service --cluster mlops --service mlops-service-1894jbu7 --force-new-deployment"
+                }
+            }
+        }
 
         
     }
