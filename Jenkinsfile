@@ -1,8 +1,8 @@
 pipeline {
     agent any
+
     environment {
         VENV_DIR = 'venv'
-        
     }
 
     stages {
@@ -14,41 +14,40 @@ pipeline {
                 }
             }
         }
-         stage('Setup Virtual Environment') {
+
+        stage('Setup Virtual Environment') {
             steps {
                 script {
-                    // Setup Virtual Environment
-                    echo 'Setup Virtual Environment.........'
+                    echo 'Setting up Virtual Environment.........'
                     sh '''
                         python -m venv ${VENV_DIR}
                         . ${VENV_DIR}/bin/activate
                         pip install --upgrade pip
-                        pip install -e .
+                        pip install -r requirements.txt
                     '''
                 }
             }
         }
-         stage('Linting Code') {
+
+        stage('Linting Code') {
             steps {
                 script {
-                    // Linting Code
                     echo 'Linting Code.........'
                     sh '''
                         set -e
                         . ${VENV_DIR}/bin/activate
-                        # Run pylint on all Python files, save report, exit with 0 always
-pylint $(find . -name "*.py") --output=pylint-report.txt --exit-zero || echo "Pylint stage completed"
 
-# Run flake8 on all Python files, ignore specific warnings, save report
-flake8 $(find . -name "*.py") --ignore=E501,E302 --output-file=flake8-report.txt || echo "Flake8 stage completed"
+                        # Run pylint
+                        pylint $(find . -name "*.py") --output=pylint-report.txt --exit-zero || echo "Pylint completed"
 
-# Format all Python files using black
-black . || echo "Black stage completed"
+                        # Run flake8
+                        flake8 $(find . -name "*.py") --ignore=E501,E302 --output-file=flake8-report.txt || echo "Flake8 completed"
 
+                        # Format with black
+                        black . || echo "Black completed"
                     '''
-                    
                 }
             }
+        }
     }
 }
-
