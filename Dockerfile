@@ -1,28 +1,30 @@
 # Use a lightweight Python image
-FROM python:slim
+FROM python:3.10-slim
 
-# Set environment variables to prevent Python from writing .pyc files & Ensure Python output is not buffered
-# This reduces the docker image size further
+# Prevent Python from writing .pyc files and buffer outputs
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
-# Set the working directory
+# Set the working directory inside the container
 WORKDIR /app
 
-# Copy only the requirements file 
-COPY requirements.txt requirements.txt
+# Install system dependencies (minimal)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
-# Install required packages but do not store cache files to reduce image size
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Copy the application code
+# Copy all project files to container
 COPY . .
 
-# Train the model before running the application
-RUN python train.py
+# Install Python dependencies (editable mode)
+RUN pip install --no-cache-dir -e .
 
-# Expose the port that Flask will run on
+# Run the training script (RFC training)
+RUN python main.py
+
+# Expose the port used by Flask
 EXPOSE 5000
 
-# Command to run the app
-CMD ["python", "app.py"]
+# Run the Flask application
+CMD ["python", "application.py"]
