@@ -103,13 +103,14 @@ pipeline {
             steps {
                 script {
                     echo 'Deploying to AWS ECS...'
-                    sh '''
-                        aws ecs update-service \
-                            --region ${AWS_DEFAULT_REGION} \
-                            --cluster mlops \
-                            --service mlops-service-1894jbu7 \
-                            --force-new-deployment
-                    '''
+                  sh """
+    aws ecs update-service \
+        --region ${AWS_DEFAULT_REGION} \
+        --cluster mlops \
+        --service mlops-service-1894jbu7 \
+        --force-new-deployment
+     """
+
                 }
             }
         }
