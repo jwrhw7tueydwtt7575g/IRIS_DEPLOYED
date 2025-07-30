@@ -6,17 +6,18 @@ pipeline {
         DOCKERHUB_CREDENTIAL_ID = 'mlops'
         DOCKERHUB_REGISTRY = 'https://registry.hub.docker.com'
         DOCKERHUB_REPOSITORY = 'vivekchaudhari17/iris_deploy'
+        AWS_DEFAULT_REGION = 'us-east-1'
     }
 
     stages {
+
         stage('Cloning from Github Repo') {
             steps {
                 script {
-                    echo 'Cloning from Github Repo.........'
+                    echo 'Cloning from Github Repo...'
                     checkout([
                         $class: 'GitSCM',
                         branches: [[name: '*/main']],
-                        extensions: [],
                         userRemoteConfigs: [[
                             credentialsId: 'token',
                             url: 'https://github.com/jwrhw7tueydwtt7575g/IRIS_DEPLOYED.git'
@@ -29,7 +30,7 @@ pipeline {
         stage('Setup Virtual Environment') {
             steps {
                 script {
-                    echo 'Setting up Virtual Environment.........'
+                    echo 'Setting up Virtual Environment...'
                     sh '''
                         python -m venv ${VENV_DIR}
                         . ${VENV_DIR}/bin/activate
@@ -43,82 +44,74 @@ pipeline {
         stage('Linting Code') {
             steps {
                 script {
-                    echo 'Linting Code.........'
+                    echo 'Linting Code...'
                     sh '''
                         set -e
                         . ${VENV_DIR}/bin/activate
 
-                        # Create an empty dummy file
                         touch dummy.py
 
-                        # Run linting tools on dummy file
                         pylint dummy.py --output=pylint-report.txt --exit-zero || echo "Pylint completed"
                         flake8 dummy.py --ignore=E501,E302 --output-file=flake8-report.txt || echo "Flake8 completed"
                         black dummy.py || echo "Black completed"
 
-                        # Cleanup dummy file
                         rm dummy.py
                     '''
                 }
             }
         }
-         stage('Trivy Scanning') {
+
+        stage('Trivy Scanning - File System') {
             steps {
                 script {
-                    // Trivy Scanning
-                    echo 'Trivy Scanning.........'
+                    echo 'Running Trivy FS Scan...'
                     sh "trivy fs ./ --format table -o trivy-fs-report.html"
                 }
             }
         }
-       stage('Building Docker Image') {
+
+        stage('Building Docker Image') {
             steps {
                 script {
-                    // Building Docker Image
-                    echo 'Building Docker Image........'
+                    echo 'Building Docker Image...'
                     dockerImage = docker.build("${DOCKERHUB_REPOSITORY}:latest")
                 }
             }
         }
 
-        stage('Scanning Docker Image') {
+        stage('Trivy Scanning - Docker Image') {
             steps {
                 script {
-                    // Scanning Docker Image
-                    echo 'Scanning Docker Image........'
+                    echo 'Scanning Docker Image with Trivy...'
                     sh "trivy image ${DOCKERHUB_REPOSITORY}:latest --format table -o trivy-image-scan-report.html"
                 }
             }
         }
 
-        stage('Pushing Docker Image') {
+        stage('Pushing Docker Image to DockerHub') {
             steps {
                 script {
-                    // Pushing Docker Image
-                    echo 'Pushing Docker Image........'
-                    docker.withRegistry("${DOCKERHUB_REGISTRY}" , "${DOCKERHUB_CREDENTIAL_ID}"){
-                        dockerImage.push('latest')
+                    echo 'Pushing Docker Image...'
+                    docker.withRegistry("${DOCKERHUB_REGISTRY}", "${DOCKERHUB_CREDENTIAL_ID}") {
+                        dockerImage.push("latest")
                     }
                 }
             }
         }
-        stage('AWS Deployment') {
-    steps {
-        script {
-            echo 'AWS Deployment........'
-            sh '''
-                aws ecs update-service \
-                    --region us-east-1 \
-                    --cluster mlops \
-                    --service mlops-service-1894jbu7 \
-                    --force-new-deployment
-            '''
+
+        stage('AWS ECS Deployment') {
+            steps {
+                script {
+                    echo 'Deploying to AWS ECS...'
+                    sh '''
+                        aws ecs update-service \
+                            --region ${AWS_DEFAULT_REGION} \
+                            --cluster mlops \
+                            --service mlops-service-1894jbu7 \
+                            --force-new-deployment
+                    '''
+                }
+            }
         }
     }
 }
-
-
-        
-    }
-}
-
