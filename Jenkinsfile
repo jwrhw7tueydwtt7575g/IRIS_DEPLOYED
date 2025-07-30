@@ -6,7 +6,6 @@ pipeline {
         DOCKERHUB_CREDENTIAL_ID = 'mlops'
         DOCKERHUB_REGISTRY = 'https://registry.hub.docker.com'
         DOCKERHUB_REPOSITORY = 'vivekchaudhari17/iris_deploy'
-        AWS_DEFAULT_REGION = 'us-east-1'
     }
 
     stages {
@@ -103,13 +102,7 @@ pipeline {
             steps {
                 script {
                     echo 'Deploying to AWS ECS...'
-                  sh """
-    aws ecs update-service \
-        --region ${AWS_DEFAULT_REGION} \
-        --cluster mlops \
-        --service mlops-service-1894jbu7 \
-        --force-new-deployment
-     """
+                  sh "aws ecs update-service --cluster mlops --service mlops-service-1894jbu7 --force-new-deployment --region us-east-1"
 
                 }
             }
