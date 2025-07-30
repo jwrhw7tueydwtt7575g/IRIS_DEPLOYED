@@ -1,7 +1,12 @@
+import sys
+import os
 import pytest
 import pickle
 import numpy as np
-from app import app 
+
+# Add the parent directory to sys.path to import app.py
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from app import app
 
 # Load your model
 with open("model/iris_model.pkl", "rb") as f:
@@ -24,10 +29,10 @@ def test_flask_predict():
             'petal_length': 1.4,
             'petal_width': 0.2
         }
-        
+
         # Send a POST request to the /predict route with form data
         response = client.post('/predict', data=form_data)
-        
+
         # Check if the response contains the expected output
         assert response.status_code == 200
         assert 'Predicted Iris Class' in response.get_data(as_text=True)
