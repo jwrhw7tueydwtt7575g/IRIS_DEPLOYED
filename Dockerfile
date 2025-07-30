@@ -1,30 +1,30 @@
 # Use a lightweight Python image
-FROM python:3.10-slim
+FROM python:slim
 
-# Prevent Python from writing .pyc files and buffer outputs
+# Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
-# Set the working directory inside the container
+# Set working directory
 WORKDIR /app
 
-# Install system dependencies (minimal)
+# Install system dependencies required by LightGBM
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
+    libgomp1 \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy all project files to container
+# Copy the application code into container
 COPY . .
 
-# Install Python dependencies (editable mode)
-RUN pip install --no-cache-dir -e .
+# Install required Python packages
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Run the training script (RFC training)
+# Run RFC training before application starts
 RUN python main.py
 
-# Expose the port used by Flask
+# Expose Flask port
 EXPOSE 5000
 
-# Run the Flask application
+# Run the Flask app
 CMD ["python", "application.py"]
