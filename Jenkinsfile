@@ -38,13 +38,16 @@ pipeline {
                         . ${VENV_DIR}/bin/activate
 
                         # Run pylint
-                        pylint $(find . -name "*.py") --output=pylint-report.txt --exit-zero || echo "Pylint completed"
+                         FILES="app.py train.py tests/test_model.py"
+
+                        # Run pylint
+                        pylint $FILES --output=pylint-report.txt --exit-zero || echo "Pylint completed"
 
                         # Run flake8
-                        flake8 $(find . -name "*.py") --ignore=E501,E302 --output-file=flake8-report.txt || echo "Flake8 completed"
+                        flake8 $FILES --ignore=E501,E302 --output-file=flake8-report.txt || echo "Flake8 completed"
 
                         # Format with black
-                        black . || echo "Black completed"
+                        black $FILES || echo "Black completed"
                     '''
                 }
             }
