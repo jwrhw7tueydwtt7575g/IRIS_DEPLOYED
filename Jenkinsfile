@@ -102,7 +102,10 @@ pipeline {
             steps {
                 script {
                     echo 'Deploying to AWS ECS...'
-                  sh "aws ecs update-service --cluster mlops --service mlops-service-1894jbu7 --force-new-deployment --region us-east-1"
+                   sh '''
+                export AWS_REGION=us-east-1
+                aws ecs update-service --cluster mlops --service mlops-service-1894jbu7 --force-new-deployment
+            '''
 
                 }
             }
