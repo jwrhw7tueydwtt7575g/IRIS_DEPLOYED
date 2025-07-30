@@ -107,7 +107,7 @@ pipeline {
             --cluster mlops \
             --service mlops-service-1894jbu7 \
             --force-new-deployment \
-            --region ap-south-1
+            --region us-east-1
         '''
 
                 }
