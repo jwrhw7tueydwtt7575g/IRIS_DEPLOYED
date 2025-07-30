@@ -21,7 +21,7 @@ COPY . .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Run RFC training before application starts
-RUN python app.py
+RUN python train.py
 
 # Expose Flask port
 EXPOSE 5000
