@@ -99,18 +99,11 @@ pipeline {
             }
         }
 
-        stage('AWS Deployment') {
+        stage('AWS Deployment to ECS') {
             steps {
-                withCredentials([usernamePassword(
-                    credentialsId: 'aws-credentials',
-                    usernameVariable: 'AWS_ACCESS_KEY_ID',
-                    passwordVariable: 'AWS_SECRET_ACCESS_KEY'
-                )]) {
+                withAWS(credentials: 'aws-credentials', region: "${AWS_DEFAULT_REGION}") {
                     sh """
-                        export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
-                        export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
-                        export AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}
-
+                        echo "Deploying to AWS ECS..."
                         aws ecs update-service \
                             --cluster mlops \
                             --service mlops-service-1894jbu7 \
