@@ -6,7 +6,7 @@ pipeline {
         DOCKERHUB_CREDENTIAL_ID = 'mlops'
         DOCKERHUB_REGISTRY = 'https://registry.hub.docker.com'
         DOCKERHUB_REPOSITORY = 'vivekchaudhari17/iris_deploy'
-        AWS_DEFAULT_REGION = 'us-east-1' // ✅ Add this
+        AWS_DEFAULT_REGION = 'us-east-1'
     }
 
     stages {
@@ -31,12 +31,12 @@ pipeline {
             steps {
                 script {
                     echo 'Setting up Virtual Environment...'
-                    sh '''
+                    sh """
                         python -m venv ${VENV_DIR}
                         . ${VENV_DIR}/bin/activate
                         pip install --upgrade pip
                         pip install -r requirements.txt
-                    '''
+                    """
                 }
             }
         }
@@ -45,7 +45,7 @@ pipeline {
             steps {
                 script {
                     echo 'Linting Code...'
-                    sh '''
+                    sh """
                         set -e
                         . ${VENV_DIR}/bin/activate
 
@@ -56,7 +56,7 @@ pipeline {
                         black dummy.py || echo "Black completed"
 
                         rm dummy.py
-                    '''
+                    """
                 }
             }
         }
@@ -100,19 +100,24 @@ pipeline {
         }
 
         stage('AWS Deployment') {
-        steps {
-            withCredentials([usernamePassword(credentialsId: 'aws-credentials', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
-                sh '''
-                    export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
-                    export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
-                    export AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: 'aws-credentials',
+                    usernameVariable: 'AWS_ACCESS_KEY_ID',
+                    passwordVariable: 'AWS_SECRET_ACCESS_KEY'
+                )]) {
+                    sh """
+                        export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
+                        export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
+                        export AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}
 
-                    aws ecs update-service \
-                        --cluster mlops \
-                        --service mlops-service-1894jbu7 \
-                        --force-new-deployment \
-                        --region ${AWS_DEFAULT_REGION}
-                '''
+                        aws ecs update-service \
+                            --cluster mlops \
+                            --service mlops-service-1894jbu7 \
+                            --force-new-deployment \
+                            --region ${AWS_DEFAULT_REGION}
+                    """
+                }
             }
         }
     }
